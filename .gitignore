@@ -1,0 +1,4 @@
+testpathfinding.py
+*.pdf
+__pycache__/
+*.pyc
