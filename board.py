@@ -1,24 +1,25 @@
 import random
 
+
 class Board:
-    def __init__(self, rows=9, columns=9):
+
+    def __init__(self, game_state=None, player1=None, player2=None, rows=9, columns=9, ):
         self.rows = rows
         self.columns = columns
 
         self.game_board = [['0' for _ in range(columns)] for _ in range(rows)]
 
-        self.h_walls = [[False for _ in range(columns)] for _ in range(rows-1)] #False = no wall exists
-        self.v_walls = [[False for _ in range(columns-1)] for _ in range(rows)] #False = no wall exists
+        self.h_walls = [[False for _ in range(columns)] for _ in range(rows - 1)]  # False = no wall exists
+        self.v_walls = [[False for _ in range(columns - 1)] for _ in range(rows)]  # False = no wall exists
 
-        self.current_turn = random.randint(0, 1)
+        self.player2 = player2
+        self.player1 = player1
 
-    def set_board_state(self, board, h_walls, v_walls, turn):
-        self.game_board = board
-        self.h_walls = h_walls
-        self.v_walls = v_walls
-        self.current_turn = turn
+        self.current_turn = random.choice([1, 2])
 
-    def get_board(self):
+        self.game_state = game_state
+
+    def get_game_board(self):
         return self.game_board
 
     def get_h_walls(self):
@@ -27,8 +28,39 @@ class Board:
     def get_v_walls(self):
         return self.v_walls
 
+    def get_player1(self):
+        return self.player1
+
+    def get_player2(self):
+        return self.player2
+
+    def get_player2_pos(self):
+        return self.player2.get_position()
+
+    def get_player1_pos(self):
+        return self.player1.get_position()
+
     def get_current_turn(self):
         return self.current_turn
+
+    def set_h_walls(self, h_walls):
+        self.h_walls = h_walls
+
+    def set_v_walls(self, v_walls):
+        self.v_walls = v_walls
+
+    def set_player1(self, player1):
+        self.player1 = player1
+
+    def set_player2(self, player2):
+        self.player2 = player2
+
+    def set_current_turn(self, turn):
+        self.current_turn = turn
+
+    #####################MAIN LOGIC#####################
+
+    ############Wall placement logic###########
 
     def is_wall_between(self, old_position, new_position):
         old_row, old_column = old_position
@@ -77,19 +109,35 @@ class Board:
         return True
 
     def place_wall(self, orientation, row, column):
+
+        if self.get_current_turn() == 1:
+            if self.player1.get_number_of_walls() <= 0:
+                return False, "No remaining walls for player 1"
+            else:
+                self.player1.set_number_of_walls(self.player1.get_number_of_walls() - 1)
+        elif self.get_current_turn() == 2:
+            if self.player2.get_number_of_walls() <= 0:
+                return False, "No remaining walls for player 2."
+            else:
+                self.player2.set_number_of_walls(self.player2.get_number_of_walls() - 1)
+
         if orientation == 'h':
             if not self.can_place_horizontal_wall(row, column):
-                return False
+                return False, "Can't place wall in this position"
             self.h_walls[row][column] = True
             self.h_walls[row][column + 1] = True
 
         elif orientation == 'v':
             if not self.can_place_vertical_wall(row, column):
-                return False
+                return False, "Can't place wall in this position"
             self.v_walls[row][column] = True
             self.v_walls[row + 1][column] = True
-
+        self.update_turn()
+        self.game_state.save_state(self)
         return True
+
+    ##################################################
+    ############Movement logic###########
 
     def get_valid_moves(self, player_pos, opponent_pos):
         valid_moves = []
@@ -131,9 +179,36 @@ class Board:
 
         return valid_moves
 
+    ##################################################
+    ############Helper functions###########
+
+    def update_turn(self):
+        if self.current_turn == 1:
+            self.current_turn = 2
+        else:
+            self.current_turn = 1
+
+    def get_current_player(self):
+        if self.current_turn == 1:
+            return self.player1
+        else:
+            return self.player2
+
     def is_inside_board(self, position):
         row, column = position
         return 0 <= row < self.rows and 0 <= column < self.columns
+
+    def update_player_position(self, player, new_player_pos):
+        if player.get_symbol() == self.player1.get_symbol():
+            self.player1.set_position(new_player_pos)
+        else:
+            self.player2.set_position(new_player_pos)
+
+        self.update_turn()
+        return self.game_state.save_state(self)
+
+    def set_game_state(self, game_state):
+        self.game_state = game_state
 
 
 
