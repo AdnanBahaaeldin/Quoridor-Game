@@ -1,4 +1,8 @@
 import pygame
+import json
+from game_state import GameState
+
+
 from widgets import Button, CircleButton
 from game_state import GameState
 WIDTH, HEIGHT = 800, 600
@@ -49,6 +53,15 @@ new_game_button = Button(
 continue_game_button = Button(
     rect=(start_x + button_width + gap, buttons_y, button_width, button_height),
     text="Continue Game",
+    font=font,
+    color=normal_color,
+    hover_color=hover_color,
+    text_color=text_color
+)
+
+browse_file_button = Button(
+    rect=(start_x + button_width -65, buttons_y, button_width, button_height),
+    text="Browse File",
     font=font,
     color=normal_color,
     hover_color=hover_color,
@@ -122,6 +135,9 @@ def main():
     state="menu"
     clock = pygame.time.Clock()
 
+    game_state = GameState()
+    board = None
+
     while run:
         clock.tick(60)  # 60 FPS
 
@@ -131,6 +147,7 @@ def main():
                 break
             if state=="menu":
                 if new_game_button.handle_event(event):
+                    board = game_state.new_game(9, 9, "Player", "AI")
                     state="new_game"
                 elif continue_game_button.handle_event(event):
                     state="continue_game"
@@ -139,16 +156,26 @@ def main():
                     state="vs_ai"
                 if vs_human_button.handle_event(event):
                     state="vs_human"
+            elif state=="continue_game":
+                if browse_file_button.handle_event(event):
+                    print("browse file clicked")
+                    loaded_game = game_state.load_game()  ##loaded gamed need to be used
             elif state=="vs_ai":
                 if undo_button.handle_event(event):
                     print("Undo clicked")
-                if redo_button.handle_event(event):
-                    print("Redo clicked")
-                if save_button.handle_event(event):
+                elif save_button.handle_event(event):
                     print("Save clicked")
-                for row, col, button in cell_buttons:
-                    if button.handle_event(event):
-                        print(f"Invalid Cell clicked: row={row}, col={col}")
+                    game_state.save_game(board)
+                    print("Game Saved")
+
+
+#                 if redo_button.handle_event(event):
+#                     print("Redo clicked")
+#                 if save_button.handle_event(event):
+#                     print("Save clicked")
+#                 for row, col, button in cell_buttons:
+#                     if button.handle_event(event):
+#                         print(f"Invalid Cell clicked: row={row}, col={col}")
                 
         if state=="menu":
             WIN.fill((255, 255, 255)) 
@@ -163,6 +190,11 @@ def main():
             WIN.blit(logo, logo_rect)
             vs_ai_button.draw(WIN)
             vs_human_button.draw(WIN)
+
+        elif state=="continue_game":
+            WIN.fill((255, 255, 255))
+            WIN.blit(logo, logo_rect)
+            browse_file_button.draw(WIN)
         
         elif state == "vs_ai":
             no_walls_player = 10
