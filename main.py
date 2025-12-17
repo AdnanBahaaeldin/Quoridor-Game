@@ -57,6 +57,15 @@ continue_game_button = Button(
     text_color=text_color
 )
 
+browse_file_button = Button(
+    rect=(start_x + button_width -65, buttons_y, button_width, button_height),
+    text="Browse File",
+    font=font,
+    color=normal_color,
+    hover_color=hover_color,
+    text_color=text_color
+)
+
 vs_ai_button = Button(
     rect=(start_x, buttons_y, button_width, button_height),
     text="VS AI",
@@ -130,12 +139,16 @@ def main():
                     state="vs_ai"
                 if vs_human_button.handle_event(event):
                     state="vs_human"
+            elif state=="continue_game":
+                if browse_file_button.handle_event(event):
+                    print("browse file clicked")
+                    loaded_game = game_state.load_game()  ##loaded gamed need to be used
             elif state=="vs_ai":
                 if undo_button.handle_event(event):
                     print("Undo clicked")
                 elif save_button.handle_event(event):
                     print("Save clicked")
-                    game_state.save_game(board) ####gives error need to pass a board that should be defied before ####
+                    game_state.save_game(board)
                     print("Game Saved")
 
 
@@ -155,6 +168,7 @@ def main():
         elif state=="continue_game":
             WIN.fill((255, 255, 255))
             WIN.blit(logo, logo_rect)
+            browse_file_button.draw(WIN)
         
         elif state == "vs_ai":
             no_walls_player = 10
