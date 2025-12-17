@@ -271,12 +271,12 @@ def main():
                 # vertical lines
                 start_pos = (board_x + i*CELL_SIZE, board_y)
                 end_pos = (board_x + i*CELL_SIZE, board_y + BOARD_PIXEL)
-                pygame.draw.line(WIN, WHITE, start_pos, end_pos, 5)
+                pygame.draw.line(WIN, WHITE, start_pos, end_pos, 4)
 
                 # horizontal lines
                 start_pos = (board_x, board_y + i*CELL_SIZE)
                 end_pos = (board_x + BOARD_PIXEL, board_y + i*CELL_SIZE)
-                pygame.draw.line(WIN, WHITE, start_pos, end_pos, 5)
+                pygame.draw.line(WIN, WHITE, start_pos, end_pos, 4)
                 
             draw_pawn(WIN, 8, 4, PLAYER_COLOR)  
             draw_pawn(WIN, 0, 4, AI_COLOR)  

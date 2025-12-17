@@ -245,7 +245,8 @@ def main():
             redo_button.draw(WIN)
             save_button.draw(WIN)
             # Draw board background
-            # pygame.draw.rect(WIN,hover_color, (board_x, board_y, BOARD_PIXEL, BOARD_PIXEL))
+            pygame.draw.rect(WIN,hover_color, (board_x, board_y, BOARD_PIXEL, BOARD_PIXEL))
+
             
             cell_buttons = []
 
@@ -266,17 +267,6 @@ def main():
             
             for r, c, btn in cell_buttons:
                 btn.draw(WIN)
-            # Draw grid lines
-            for i in range(BOARD_SIZE + 1):
-                # vertical lines
-                start_pos = (board_x + i*CELL_SIZE, board_y)
-                end_pos = (board_x + i*CELL_SIZE, board_y + BOARD_PIXEL)
-                pygame.draw.line(WIN, WHITE, start_pos, end_pos, 5)
-
-                # horizontal lines
-                start_pos = (board_x, board_y + i*CELL_SIZE)
-                end_pos = (board_x + BOARD_PIXEL, board_y + i*CELL_SIZE)
-                pygame.draw.line(WIN, WHITE, start_pos, end_pos, 5)
                 
             draw_pawn(WIN, 8, 4, PLAYER_COLOR)  
             draw_pawn(WIN, 0, 4, AI_COLOR)  

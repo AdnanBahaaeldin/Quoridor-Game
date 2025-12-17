@@ -209,3 +209,8 @@ class Board:
 
     def set_game_state(self, game_state):
         self.game_state = game_state
+
+
+
+
+def main():

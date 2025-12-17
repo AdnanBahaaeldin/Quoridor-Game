@@ -1,6 +1,6 @@
 import pygame
 from widgets import Button, CircleButton
-from game_state import GameState
+from board import Board
 WIDTH, HEIGHT = 800, 600
 button_width = 180
 button_height = 50
@@ -17,7 +17,6 @@ hover_color = (172, 142, 104)
 text_color = (255, 255, 255)
 AI_COLOR = (108, 104, 172)
 PLAYER_COLOR = (104, 168, 172)
-board = None
 
 pygame.init()
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -95,27 +94,12 @@ save_button = Button(
                
 board_x = (WIN.get_width() - BOARD_PIXEL) // 2
 board_y = 100
-    
-def highlight_cell(surface, row, col, color):
-    rect = pygame.Rect(board_x + col * CELL_SIZE + 3, board_y + row * CELL_SIZE + 3, CELL_SIZE-4, CELL_SIZE-4)
-    pygame.draw.rect(surface, color, rect)
-    is_hovered = rect.collidepoint(pygame.mouse.get_pos())
-    if is_hovered:
-        pygame.draw.rect(surface, (255, 255, 255), rect, 3)
 
 def draw_pawn(surface, row, col, color):
     center_x = board_x + col * CELL_SIZE + CELL_SIZE // 2
     center_y = board_y + row * CELL_SIZE + CELL_SIZE // 2
     radius = CELL_SIZE // 3
     pygame.draw.circle(surface, color, (center_x, center_y), radius)
-
-def click_in_cell(pos):
-    x, y = pos
-    if board_x <= x < board_x + BOARD_PIXEL and board_y <= y < board_y + BOARD_PIXEL:
-        col = (x - board_x) // CELL_SIZE
-        row = (y - board_y) // CELL_SIZE
-        return (row, col)
-    return None
 
 def main():
     run = True
@@ -142,13 +126,6 @@ def main():
             elif state=="vs_ai":
                 if undo_button.handle_event(event):
                     print("Undo clicked")
-                if redo_button.handle_event(event):
-                    print("Redo clicked")
-                if save_button.handle_event(event):
-                    print("Save clicked")
-                for row, col, button in cell_buttons:
-                    if button.handle_event(event):
-                        print(f"Invalid Cell clicked: row={row}, col={col}")
                 
         if state=="menu":
             WIN.fill((255, 255, 255)) 
@@ -157,14 +134,13 @@ def main():
             continue_game_button.draw(WIN)
             
         elif state=="new_game":
-            new_game = GameState()
-            new_game.new_game(9,9,"Blue","Purple")
             WIN.fill((255, 255, 255)) 
             WIN.blit(logo, logo_rect)
             vs_ai_button.draw(WIN)
             vs_human_button.draw(WIN)
         
         elif state == "vs_ai":
+            board = Board(player1="Human", player2="AI")
             no_walls_player = 10
             no_walls_ai = 10
             WIN.fill((255, 255, 255))
@@ -187,8 +163,8 @@ def main():
                 end_pos = (board_x + BOARD_PIXEL, board_y + i*CELL_SIZE)
                 pygame.draw.line(WIN, WHITE, start_pos, end_pos, 4)
             
-            draw_pawn(WIN, 8, 4, PLAYER_COLOR)  
-            draw_pawn(WIN, 0, 4, AI_COLOR)  
+            draw_pawn(WIN, 8, 4, PLAYER_COLOR)  # Player at (8,4)
+            draw_pawn(WIN, 0, 4, AI_COLOR) 
             
             player_circle = CircleButton(
                 center=(60, 540),
@@ -225,109 +201,10 @@ def main():
                 pygame.draw.rect(WIN, AI_COLOR, (wall_x, wall_y, 80, 4))
     
             turn_font = pygame.font.SysFont(None, 32)
-            text_surf = turn_font.render("It's {}'s turn".format(new_game.board.get_current_player().name), True, PLAYER_COLOR if new_game.board.get_current_player().name == "Blue" else AI_COLOR)
-            text_rect = text_surf.get_rect(midtop=(WIDTH // 2, 50))    
-            WIN.blit(text_surf, text_rect)  
-
-            valid_moves = new_game.board.get_valid_moves(
-                new_game.board.get_current_player().get_position(),
-                new_game.board.player2.get_position() if new_game.board.get_current_player() == new_game.board.player1 else new_game.board.player1.get_position()
-            )
-            for move in valid_moves:
-                highlight_cell(WIN, move[0], move[1], (199, 179, 153))
-        
-        elif state == "vs_human":
-            no_walls_player = 10
-            no_walls_ai = 10
-            WIN.fill((255, 255, 255))
-            #draw navbar
-            undo_button.draw(WIN)
-            redo_button.draw(WIN)
-            save_button.draw(WIN)
-            # Draw board background
-            # pygame.draw.rect(WIN,hover_color, (board_x, board_y, BOARD_PIXEL, BOARD_PIXEL))
-            
-            cell_buttons = []
-
-            for row in range(BOARD_SIZE):
-                for col in range(BOARD_SIZE):
-                    rect = (
-                        board_x + col * CELL_SIZE,
-                        board_y + row * CELL_SIZE,
-                        CELL_SIZE,
-                        CELL_SIZE
-                    )
-                    button = Button(
-                        rect=rect,
-                        color=hover_color,
-                        hover_color=(hover_color[0]+20, hover_color[1]+20, hover_color[2]+20)
-                    )
-                    cell_buttons.append((row, col, button))
-            
-            for r, c, btn in cell_buttons:
-                btn.draw(WIN)
-            # Draw grid lines
-            for i in range(BOARD_SIZE + 1):
-                # vertical lines
-                start_pos = (board_x + i*CELL_SIZE, board_y)
-                end_pos = (board_x + i*CELL_SIZE, board_y + BOARD_PIXEL)
-                pygame.draw.line(WIN, WHITE, start_pos, end_pos, 5)
-
-                # horizontal lines
-                start_pos = (board_x, board_y + i*CELL_SIZE)
-                end_pos = (board_x + BOARD_PIXEL, board_y + i*CELL_SIZE)
-                pygame.draw.line(WIN, WHITE, start_pos, end_pos, 5)
+            turn_text = turn_font.render("It's {}'s turn".format(board.get_current_player()), True, PLAYER_COLOR if board.get_current_player() == "Human" else AI_COLOR)
+            text
                 
-            draw_pawn(WIN, 8, 4, PLAYER_COLOR)  
-            draw_pawn(WIN, 0, 4, AI_COLOR)  
-            
-            player_circle = CircleButton(
-                center=(60, 540),
-                radius=50,
-                circle_color=(255, 255, 255),
-                hover_color=PLAYER_COLOR,
-                text="Put a wall",
-                font=pygame.font.SysFont(None, 24),
-                text_color=PLAYER_COLOR,
-                border_color=PLAYER_COLOR,
-                border_width=5
-            )
-            player_circle.draw(WIN)
-            ai_circle = CircleButton(
-                center=(740, 60),
-                radius=50,
-                circle_color=(255, 255, 255),
-                hover_color=AI_COLOR,
-                text="Put a wall",
-                font=pygame.font.SysFont(None, 24),
-                text_color=AI_COLOR,
-                border_color=AI_COLOR,
-                border_width=5
-            )
-            ai_circle.draw(WIN)
-        
-            for i in range(no_walls_player):
-                wall_x = 20
-                wall_y = 470 - i * 15
-                pygame.draw.rect(WIN, PLAYER_COLOR, (wall_x, wall_y, 80, 4))
-            for i in range(no_walls_ai):
-                wall_x = 700 
-                wall_y = 125 + i * 15
-                pygame.draw.rect(WIN, AI_COLOR, (wall_x, wall_y, 80, 4))
-    
-            turn_font = pygame.font.SysFont(None, 32)
-            text_surf = turn_font.render("It's {}'s turn".format(new_game.board.get_current_player().name), True, PLAYER_COLOR if new_game.board.get_current_player().name == "Blue" else AI_COLOR)
-            text_rect = text_surf.get_rect(midtop=(WIDTH // 2, 50))    
-            WIN.blit(text_surf, text_rect)  
-
-            valid_moves = new_game.board.get_valid_moves(
-                new_game.board.get_current_player().get_position(),
-                new_game.board.player2.get_position() if new_game.board.get_current_player() == new_game.board.player1 else new_game.board.player1.get_position()
-            )
-            for move in valid_moves:
-                highlight_cell(WIN, move[0], move[1], (199, 179, 153))
                 
-                    
         pygame.display.flip()
         pygame.display.update()
 
