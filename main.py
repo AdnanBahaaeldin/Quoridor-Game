@@ -1,5 +1,4 @@
 import pygame
-import json
 from game_state import GameState
 
 
