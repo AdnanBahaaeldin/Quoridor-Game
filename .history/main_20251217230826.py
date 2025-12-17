@@ -387,9 +387,9 @@ def main():
             turn_font = pygame.font.SysFont(None, 32)
             if game_state.board:
                 current_player = game_state.board.get_current_player()
-                text_surf = turn_font.render("It's {}'s turn".format(current_player.name), True, PLAYER_COLOR if current_player.name == "Player" else AI_COLOR)
+                text_surf = turn_font.render("It's {}'s turn".format(current_player.name), True, PLAYER_COLOR if current_player.name == "Blue" else AI_COLOR)
             else:
-                text_surf = turn_font.render("It's {}'s turn".format("Player"), True, PLAYER_COLOR if current_player.name == "Player" else AI_COLOR)
+                text_surf = turn_font.render("It's {}'s turn".format("Player"), True, PLAYER_COLOR if current_player.name == "Blue" else AI_COLOR)
             text_rect = text_surf.get_rect(midtop=(WIDTH // 2, 50))    
             WIN.blit(text_surf, text_rect)  
 

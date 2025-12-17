@@ -22,8 +22,6 @@ text_color = (255, 255, 255)
 AI_COLOR = (108, 104, 172)
 PLAYER_COLOR = (104, 168, 172)
 board = None
-valid_buttons = []
-cell_buttons = []
 
 pygame.init()
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -132,13 +130,6 @@ def click_in_cell(pos):
         return (row, col)
     return None
 
-def error_message(surface, message, error=False):
-    if error:
-        font = pygame.font.SysFont(None, 24)
-        text_surf = font.render(message, True, (255, 0, 0))
-        text_rect = text_surf.get_rect(center=(WIDTH // 2, HEIGHT - 30))
-        surface.blit(text_surf, text_rect)
-
 def main():
     run = True
     state="menu"
@@ -146,7 +137,6 @@ def main():
 
     game_state = GameState()
     board = None
-    error = False
 
     while run:
         clock.tick(60)  # 60 FPS
@@ -166,40 +156,10 @@ def main():
                     state="vs_ai"
                 if vs_human_button.handle_event(event):
                     state="vs_human"
-                    # create grid buttons once when entering vs_human
-                    cell_buttons.clear()
-                    for row in range(BOARD_SIZE):
-                        for col in range(BOARD_SIZE):
-                            rect = (
-                                board_x + col * CELL_SIZE,
-                                board_y + row * CELL_SIZE,
-                                CELL_SIZE,
-                                CELL_SIZE
-                            )
-                            button = Button(
-                                rect=rect,
-                                color=hover_color,
-                                hover_color=(hover_color[0]+20, hover_color[1]+20, hover_color[2]+20)
-                            )
-                            cell_buttons.append((row, col, button))
             elif state=="continue_game":
                 if browse_file_button.handle_event(event):
                     print("browse file clicked")
                     loaded_game = game_state.load_game()  ##loaded gamed need to be used
-            elif state=="vs_human":
-                for row, col, button in cell_buttons:
-                    if button.handle_event(event):
-                        # If the clicked cell is in the list of valid moves, apply it; otherwise show error
-                        if (row, col) in valid_buttons:
-                            active_board = game_state.board if getattr(game_state, 'board', None) else board
-                            if active_board is not None:
-                                player = active_board.get_current_player()
-                                active_board.update_player_position(player, (row, col))
-                                error = False
-                            else:
-                                print("No active board to apply move")
-                        else:
-                            error = True
             elif state=="vs_ai":
                 if undo_button.handle_event(event):
                     print("Undo clicked")
@@ -207,6 +167,9 @@ def main():
                     print("Save clicked")
                     game_state.save_game(board)
                     print("Game Saved")
+                for row, col, button in cell_buttons:
+                    if button.handle_event(event):
+                        print(f"Invalid Cell clicked: row={row}, col={col}")
 
 #                 if redo_button.handle_event(event):
 #                     print("Redo clicked")
@@ -220,7 +183,8 @@ def main():
             continue_game_button.draw(WIN)
             
         elif state=="new_game":
-            # New game was already created when user clicked the button
+            new_game = GameState()
+            new_game.new_game(9,9,"Blue","Purple")
             WIN.fill((255, 255, 255)) 
             WIN.blit(logo, logo_rect)
             vs_ai_button.draw(WIN)
@@ -254,15 +218,8 @@ def main():
                 end_pos = (board_x + BOARD_PIXEL, board_y + i*CELL_SIZE)
                 pygame.draw.line(WIN, WHITE, start_pos, end_pos, 4)
             
-            # Draw pawns using current board positions
-            if game_state.board:
-                p1_pos = game_state.board.get_player1_pos()
-                p2_pos = game_state.board.get_player2_pos()
-                draw_pawn(WIN, p1_pos[0], p1_pos[1], PLAYER_COLOR)
-                draw_pawn(WIN, p2_pos[0], p2_pos[1], AI_COLOR)
-            else:
-                draw_pawn(WIN, 8, 4, PLAYER_COLOR)
-                draw_pawn(WIN, 0, 4, AI_COLOR)
+            draw_pawn(WIN, 8, 4, PLAYER_COLOR)  
+            draw_pawn(WIN, 0, 4, AI_COLOR)  
             
             player_circle = CircleButton(
                 center=(60, 540),
@@ -299,21 +256,16 @@ def main():
                 pygame.draw.rect(WIN, AI_COLOR, (wall_x, wall_y, 80, 4))
     
             turn_font = pygame.font.SysFont(None, 32)
-            if game_state.board:
-                current_player = game_state.board.get_current_player()
-                text_surf = turn_font.render("It's {}'s turn".format(current_player.name), True, PLAYER_COLOR if current_player.name == "Blue" else AI_COLOR)
-            else:
-                text_surf = turn_font.render("It's {}'s turn".format("Player"), True, PLAYER_COLOR)
+            text_surf = turn_font.render("It's {}'s turn".format(new_game.board.get_current_player().name), True, PLAYER_COLOR if new_game.board.get_current_player().name == "Blue" else AI_COLOR)
             text_rect = text_surf.get_rect(midtop=(WIDTH // 2, 50))    
             WIN.blit(text_surf, text_rect)  
 
-            if game_state.board:
-                valid_moves = game_state.board.get_valid_moves(
-                    game_state.board.get_current_player().get_position(),
-                    game_state.board.player2.get_position() if game_state.board.get_current_player() == game_state.board.player1 else game_state.board.player1.get_position()
-                )
-                for move in valid_moves:
-                    highlight_cell(WIN, move[0], move[1], (199, 179, 153))
+            valid_moves = new_game.board.get_valid_moves(
+                new_game.board.get_current_player().get_position(),
+                new_game.board.player2.get_position() if new_game.board.get_current_player() == new_game.board.player1 else new_game.board.player1.get_position()
+            )
+            for move in valid_moves:
+                highlight_cell(WIN, move[0], move[1], (199, 179, 153))
         
         elif state == "vs_human":
             no_walls_player = 10
@@ -324,8 +276,25 @@ def main():
             redo_button.draw(WIN)
             save_button.draw(WIN)
             # Draw board background
+            # pygame.draw.rect(WIN,hover_color, (board_x, board_y, BOARD_PIXEL, BOARD_PIXEL))
             
-            # cell buttons are created once when entering this state
+            cell_buttons = []
+
+            for row in range(BOARD_SIZE):
+                for col in range(BOARD_SIZE):
+                    rect = (
+                        board_x + col * CELL_SIZE,
+                        board_y + row * CELL_SIZE,
+                        CELL_SIZE,
+                        CELL_SIZE
+                    )
+                    button = Button(
+                        rect=rect,
+                        color=hover_color,
+                        hover_color=(hover_color[0]+20, hover_color[1]+20, hover_color[2]+20)
+                    )
+                    cell_buttons.append((row, col, button))
+            
             for r, c, btn in cell_buttons:
                 btn.draw(WIN)
             # Draw grid lines
@@ -339,17 +308,10 @@ def main():
                 start_pos = (board_x, board_y + i*CELL_SIZE)
                 end_pos = (board_x + BOARD_PIXEL, board_y + i*CELL_SIZE)
                 pygame.draw.line(WIN, WHITE, start_pos, end_pos, 5)
-
-            # Draw pawns using current board positions
-            if game_state.board:
-                p1_pos = game_state.board.get_player1_pos()
-                p2_pos = game_state.board.get_player2_pos()
-                draw_pawn(WIN, p1_pos[0], p1_pos[1], PLAYER_COLOR)
-                draw_pawn(WIN, p2_pos[0], p2_pos[1], AI_COLOR)
-            else:
-                draw_pawn(WIN, 8, 4, PLAYER_COLOR)
-                draw_pawn(WIN, 0, 4, AI_COLOR)
-
+                
+            draw_pawn(WIN, 8, 4, PLAYER_COLOR)  
+            draw_pawn(WIN, 0, 4, AI_COLOR)  
+            
             player_circle = CircleButton(
                 center=(60, 540),
                 radius=50,
@@ -385,28 +347,17 @@ def main():
                 pygame.draw.rect(WIN, AI_COLOR, (wall_x, wall_y, 80, 4))
     
             turn_font = pygame.font.SysFont(None, 32)
-            if game_state.board:
-                current_player = game_state.board.get_current_player()
-                text_surf = turn_font.render("It's {}'s turn".format(current_player.name), True, PLAYER_COLOR if current_player.name == "Player" else AI_COLOR)
-            else:
-                text_surf = turn_font.render("It's {}'s turn".format("Player"), True, PLAYER_COLOR if current_player.name == "Player" else AI_COLOR)
+            text_surf = turn_font.render("It's {}'s turn".format(new_game.board.get_current_player().name), True, PLAYER_COLOR if new_game.board.get_current_player().name == "Blue" else AI_COLOR)
             text_rect = text_surf.get_rect(midtop=(WIDTH // 2, 50))    
             WIN.blit(text_surf, text_rect)  
 
-            if game_state.board:
-                valid_moves = game_state.board.get_valid_moves(
-                    game_state.board.get_current_player().get_position(),
-                    game_state.board.player2.get_position() if game_state.board.get_current_player() == game_state.board.player1 else game_state.board.player1.get_position()
-                )
-                # refresh valid buttons for this frame
-                valid_buttons.clear()
-                for move in valid_moves:
-                    highlight_cell(WIN, move[0], move[1], (199, 179, 153))
-                    valid_buttons.append((move[0], move[1]))
+            valid_moves = new_game.board.get_valid_moves(
+                new_game.board.get_current_player().get_position(),
+                new_game.board.player2.get_position() if new_game.board.get_current_player() == new_game.board.player1 else new_game.board.player1.get_position()
+            )
+            for move in valid_moves:
+                highlight_cell(WIN, move[0], move[1], (199, 179, 153))
                 
-            if error:
-                error_message(WIN, "Invalid Move!", error)
-                   
                     
         pygame.display.flip()
         pygame.display.update()
