@@ -1,4 +1,8 @@
 import pygame
+import json
+from game_state import GameState
+
+
 from widgets import Button, CircleButton
 WIDTH, HEIGHT = 800, 600
 button_width = 180
@@ -105,6 +109,9 @@ def main():
     state="menu"
     clock = pygame.time.Clock()
 
+    game_state = GameState()
+    board = None
+
     while run:
         clock.tick(60)  # 60 FPS
 
@@ -114,6 +121,7 @@ def main():
                 break
             if state=="menu":
                 if new_game_button.handle_event(event):
+                    board = game_state.new_game(9, 9, "Player", "AI")
                     state="new_game"
                 elif continue_game_button.handle_event(event):
                     state="continue_game"
@@ -125,6 +133,12 @@ def main():
             elif state=="vs_ai":
                 if undo_button.handle_event(event):
                     print("Undo clicked")
+                elif save_button.handle_event(event):
+                    print("Save clicked")
+                    game_state.save_game(board) ####gives error need to pass a board that should be defied before ####
+                    print("Game Saved")
+
+
                 
         if state=="menu":
             WIN.fill((255, 255, 255)) 
@@ -137,6 +151,10 @@ def main():
             WIN.blit(logo, logo_rect)
             vs_ai_button.draw(WIN)
             vs_human_button.draw(WIN)
+
+        elif state=="continue_game":
+            WIN.fill((255, 255, 255))
+            WIN.blit(logo, logo_rect)
         
         elif state == "vs_ai":
             no_walls_player = 10
