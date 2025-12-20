@@ -1,6 +1,5 @@
 import random
-
-
+import pathfinding
 class Board:
 
     def __init__(self, game_state=None, player1=None, player2=None, rows=9, columns=9, ):
@@ -9,8 +8,8 @@ class Board:
 
         self.game_board = [['0' for _ in range(columns)] for _ in range(rows)]
 
-        self.h_walls = [[False for _ in range(columns)] for _ in range(rows - 1)]  # False = no wall exists
-        self.v_walls = [[False for _ in range(columns - 1)] for _ in range(rows)]  # False = no wall exists
+        self.h_walls = [[False for _ in range(columns)] for _ in range(rows)]  # False = no wall exists
+        self.v_walls = [[False for _ in range(columns)] for _ in range(rows)]  # False = no wall exists
 
         self.player2 = player2
         self.player1 = player1
@@ -91,10 +90,22 @@ class Board:
         if self.h_walls[row][column] or self.h_walls[row][column + 1]:
             return False
 
-        if self.v_walls[row][column + 1]:
+        if self.v_walls[row][column]:
             return False
 
-        return True
+        self.h_walls[row][column] = True
+        self.h_walls[row][column+1] = True
+
+        player1_can_reach = pathfinding.has_valid_path(self, self.get_player1_pos(), 0)
+        player2_can_reach = pathfinding.has_valid_path(self, self.get_player2_pos(), self.rows - 1)
+
+        if player1_can_reach and player2_can_reach:
+            return True
+
+        self.h_walls[row][column] = False
+        self.h_walls[row][column+1] = False
+
+        return False
 
     def can_place_vertical_wall(self, row, column):
         if not self.is_inside_board((row, column)):
@@ -103,37 +114,51 @@ class Board:
         if self.v_walls[row][column] or self.v_walls[row + 1][column]:
             return False
 
-        if self.h_walls[row + 1][column]:
+        if self.h_walls[row][column]:
             return False
 
-        return True
+        self.v_walls[row][column] = True
+        self.v_walls[row+1][column] = True
+
+        player1_can_reach = pathfinding.has_valid_path(self, self.get_player1_pos(), 0)
+        player2_can_reach = pathfinding.has_valid_path(self, self.get_player2_pos(), self.rows - 1)
+
+        if player1_can_reach and player2_can_reach :
+            return True
+
+        self.v_walls[row][column] = False
+        self.v_walls[row+1][column] = False
+
+        return False
+
 
     def place_wall(self, orientation, row, column):
 
-        if self.get_current_turn() == 1:
-            if self.player1.get_number_of_walls() <= 0:
-                return False, "No remaining walls for player 1"
-            else:
-                self.player1.set_number_of_walls(self.player1.get_number_of_walls() - 1)
-        elif self.get_current_turn() == 2:
-            if self.player2.get_number_of_walls() <= 0:
-                return False, "No remaining walls for player 2."
-            else:
-                self.player2.set_number_of_walls(self.player2.get_number_of_walls() - 1)
-
         if orientation == 'h':
             if not self.can_place_horizontal_wall(row, column):
-                return False, "Can't place wall in this position"
+                return False
             self.h_walls[row][column] = True
             self.h_walls[row][column + 1] = True
 
         elif orientation == 'v':
             if not self.can_place_vertical_wall(row, column):
-                return False, "Can't place wall in this position"
+                return False
             self.v_walls[row][column] = True
             self.v_walls[row + 1][column] = True
-        self.update_turn()
+
+        if self.get_current_turn() == 1:
+            if self.player1.get_number_of_walls() <= 0:
+                return False
+            else:
+                self.player1.set_number_of_walls(self.player1.get_number_of_walls() - 1)
+        elif self.get_current_turn() == 2:
+            if self.player2.get_number_of_walls() <= 0:
+                return False
+            else:
+                self.player2.set_number_of_walls(self.player2.get_number_of_walls() - 1)
+
         self.game_state.save_state(self)
+
         return True
 
     ##################################################
