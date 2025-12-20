@@ -11,6 +11,7 @@ class GameState:
        self.board = None
        self.undo_stack = []
        self.redo_stack = []
+       self.game_winner = None
 
    def save_state(self, board):
        snapshot = {
@@ -35,6 +36,12 @@ class GameState:
        self.redo_stack.clear()
        if board.player1.position[0] == 0 or board.player2.position[0] == board.rows - 1:
            self.is_game_over = True
+
+       if self.is_game_over == True:
+           if board.player1.position[0] == 0:
+               self.game_winner = "player1"
+       else:
+           self.game_winner = "player2"
 
        return self.is_game_over
 
@@ -99,7 +106,7 @@ class GameState:
             print ("Load file not found.")
             return None
 
-   def new_game(self, rows, columns, player1_name, player2_name):
+   def new_game(self, rows, columns, player1_name = 'player1', player2_name = 'player2'):
        player1 = Player(player1_name, (rows-1, columns // 2), 1)
        player2 = Player(player2_name, (0, columns // 2), 2)
        self.board = Board(self, player1, player2, rows, columns)

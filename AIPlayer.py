@@ -56,7 +56,7 @@ class AIPlayer:
             # Place wall using board's place_wall method
             orientation = move[2]  # 'h' or 'v'
             row, col = move[1]
-            board.place_wall(board , orientation, row, col)
+            board.place_wall(orientation, row, col)
 
     def get_valid_moves(self, board):
         """Generate all valid moves for the current player using Board's methods"""
@@ -117,8 +117,8 @@ class AIPlayer:
         player1 = board.get_player1()
         player2 = board.get_player2()
         
-        p1_path = shortest_path_length(board, player1.get_position(), 8)  # Row 8 is the goal for player 1
-        p2_path = shortest_path_length(board, player2.get_position(), 0)  # Row 0 is the goal for player 2
+        p1_path = shortest_path_length(board, player1.get_position(), 0)  # Row 8 is the goal for player 1
+        p2_path = shortest_path_length(board, player2.get_position(), 8)  # Row 0 is the goal for player 2
 
         # Check for terminal states
         if p1_path == 0:
@@ -139,9 +139,9 @@ class AIPlayer:
         player2 = board.get_player2()
         
         # Check terminal states
-        if player1.get_position()[0] == 8:  # Player 1 reached goal
+        if player1.get_position()[0] == 0:  # Player 1 reached goal
             return -float('inf')
-        if player2.get_position()[0] == 0:  # Player 2 reached goal
+        if player2.get_position()[0] == 8:  # Player 2 reached goal
             return float('inf')
 
         # Base case: reached depth limit
@@ -155,7 +155,7 @@ class AIPlayer:
             if move[0] == PAWN_MOVE_CODE:
                 target_pos = move[1]
                 current = board.get_current_player()
-                goal_row = 0 if board.get_current_player() == player2 else 8
+                goal_row = 8 if board.get_current_player() == player2 else 0
                 if target_pos[0] == goal_row:
                     return 0  # Winning move
             return 1
@@ -189,14 +189,15 @@ class AIPlayer:
 
     def ai_move(self):
         """Execute AI move based on difficulty level"""
-        valid_moves = self.get_valid_moves(self.board)
+        board_copy = copy.deepcopy(self.board)
+        valid_moves = self.get_valid_moves(board_copy)
 
         if not valid_moves:
             return  # No valid moves available
 
         # Check for immediate win
         current_player = self.board.get_current_player()
-        goal_row = 0 if current_player == self.board.get_player2() else 8
+        goal_row = 8 if current_player == self.board.get_player2() else 0
         
         fast_win_move = next((m for m in valid_moves 
                               if m[0] == PAWN_MOVE_CODE and m[1][0] == goal_row), 
@@ -236,6 +237,8 @@ class AIPlayer:
 
         if best_move:
             self.apply_move(self.board, best_move)
+
+        print(best_move)
 
 
 # Factory function for creating AI players
