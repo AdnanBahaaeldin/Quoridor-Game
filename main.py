@@ -1,7 +1,5 @@
 import pygame
 import json
-
-from AIPlayer import AIPlayer
 from game_state import GameState
 import pathfinding
 
@@ -341,11 +339,6 @@ def draw_wall_counter_text(surface, label, count, x, y, color):
     text = wall_font.render(f"{label}: {count}", True, color)
     surface.blit(text, (x, y))
 
-def print_winner(surface, player):
-    font = pygame.font.SysFont(None, 24)
-    text_surf = font.render(player + ' WON!', True, (255, 0, 0))
-    text_rect = text_surf.get_rect(center=(WIDTH // 2, HEIGHT - 30))
-    surface.blit(text_surf, text_rect)
 
 def main():
 
@@ -356,7 +349,6 @@ def main():
     clock = pygame.time.Clock()
 
     game_state = GameState()
-    active_board = None
     board = None
     error = False
     # ⚡ Wall counters
@@ -406,7 +398,6 @@ def main():
                             cell_buttons.append((row, col, button))
                 if vs_human_button.handle_event(event):
                     state="vs_human"
-                    active_board = game_state.board
                     # create grid buttons once when entering vs_human
                     cell_buttons.clear()
                     for row in range(BOARD_SIZE):
@@ -473,8 +464,28 @@ def main():
                         )
                         cell_buttons.append((row, col, button))
             elif state=="vs_human":
-                if save_button.handle_event(event):
-                    game_state.save_game(active_board)
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if player_circle.is_clicked(event.pos) and  no_walls_player > 0:
+                            placing_wall = True
+                            wall_owner = "PLAYER"
+
+                    if player_2_circle.is_clicked(event.pos) and no_walls_ai > 0:
+                            placing_wall = True
+                            wall_owner = "AI"
+
+                if placing_wall and event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = get_wall_from_mouse(*event.pos)
+                    if pos:
+                        r, c = pos
+                        if not wall_overlaps(r, c, wall_orientation, walls):
+                            walls.append((r, c, wall_orientation))
+                            if wall_owner == "PLAYER":
+                                no_walls_player -= 1
+                            elif wall_owner == "AI":
+                                no_walls_ai -= 1
+
+                            placing_wall = False
+                            wall_owner = None
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if player_circle.is_clicked(event.pos) and  no_walls_player > 0 and game_state.board.get_current_player().get_name() == 'Player':
