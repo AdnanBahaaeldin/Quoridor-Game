@@ -73,8 +73,8 @@ continue_game_button = Button(
 )
 
 browse_file_button = Button(
-    rect=(start_x + button_width -65, buttons_y, button_width, button_height),
-    text="Browse File",
+    rect=(start_x + button_width -65, buttons_y, button_width+110, button_height),
+    text="Load recently saved game",
     font=font,
     color=normal_color,
     hover_color=hover_color,
@@ -440,6 +440,21 @@ def main():
                         else:
                             error = True
             elif state=="vs_ai":
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if player_circle.is_clicked(event.pos) and  no_walls_player > 0:
+                            placing_wall = True
+                            wall_owner = "PLAYER"
+
+                if placing_wall and event.type == pygame.MOUSEBUTTONDOWN:
+                    pos = get_wall_from_mouse(*event.pos)
+                    if pos:
+                        r, c = pos
+                        if not wall_overlaps(r, c, wall_orientation, walls):
+                            walls.append((r, c, wall_orientation))
+                            if wall_owner == "PLAYER":
+                                no_walls_player -= 1
+                            placing_wall = False
+
                 if undo_button.handle_event(event):
                     print("Undo clicked")
                 elif save_button.handle_event(event):
@@ -525,8 +540,18 @@ def main():
                 border_width=5
             )
             ai_circle.draw(WIN)
+
+
             draw_player_wall_counter(no_walls_player)
             draw_ai_wall_counter(no_walls_ai)
+
+            draw_walls(WIN)
+
+            if placing_wall:
+                mx, my = pygame.mouse.get_pos()
+                pos = get_wall_from_mouse(mx, my)
+                if pos:
+                    draw_wall_preview(WIN, *pos)
     
             turn_font = pygame.font.SysFont(None, 32)
             if game_state.board:
