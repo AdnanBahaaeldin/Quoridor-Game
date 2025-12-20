@@ -28,6 +28,8 @@ walls = []   # each wall: (row, col, orientation)
 placing_wall = False
 wall_orientation ="H"  # "H" or "V"
 
+wall_owner = None   # "PLAYER" or "AI"
+
 WALL_THICKNESS = 8
 WALL_COLOR = (139, 69, 19)
 HOVER_COLOR = (180, 120, 80)
@@ -48,6 +50,8 @@ buttons_y = logo_rect.bottom + 30
 total_width = button_width * 2 + gap
 start_x = WIN.get_width() // 2 - total_width // 2
 font = pygame.font.SysFont(None, 32)
+wall_font = pygame.font.SysFont(None, 26)
+
 
 
 new_game_button = Button(
@@ -333,6 +337,10 @@ def draw_wall_counter_text(surface, count, x, y, color, label):
     text = font.render(f"{label}: {count}", True, color)
     surface.blit(text, (x, y))
 
+def draw_wall_counter_text(surface, label, count, x, y, color):
+    text = wall_font.render(f"{label}: {count}", True, color)
+    surface.blit(text, (x, y))
+
 
 def main():
 
@@ -396,14 +404,13 @@ def main():
                     loaded_game = game_state.load_game()  ##loaded gamed need to be used
             elif state=="vs_human":
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if player_circle.is_clicked(event.pos) :
-                        if no_walls_player > 0:
+                    if player_circle.is_clicked(event.pos) and  no_walls_player > 0:
                             placing_wall = True
+                            wall_owner = "PLAYER"
 
-
-                    if player_2_circle.is_clicked(event.pos):
-                        if no_walls_player > 0:
+                    if player_2_circle.is_clicked(event.pos) and no_walls_ai > 0:
                             placing_wall = True
+                            wall_owner = "AI"
 
                 if placing_wall and event.type == pygame.MOUSEBUTTONDOWN:
                     pos = get_wall_from_mouse(*event.pos)
@@ -411,9 +418,13 @@ def main():
                         r, c = pos
                         if not wall_overlaps(r, c, wall_orientation, walls):
                             walls.append((r, c, wall_orientation))
-                            no_walls_player -= 1
-                            placing_wall = False
+                            if wall_owner == "PLAYER":
+                                no_walls_player -= 1
+                            elif wall_owner == "AI":
+                                no_walls_ai -= 1
 
+                            placing_wall = False
+                            wall_owner = None
 
                 for row, col, button in cell_buttons:
                     if button.handle_event(event):
@@ -535,8 +546,6 @@ def main():
                     highlight_cell(WIN, move[0], move[1], (199, 179, 153))
         
         elif state == "vs_human":
-            no_walls_player = 10
-            no_walls_ai = 10
             WIN.fill((255, 255, 255))
             #draw navbar
             undo_button.draw(WIN)
@@ -593,9 +602,12 @@ def main():
                 border_width=5
             )
             player_2_circle.draw(WIN)
-          
-            draw_player_wall_counter(no_walls_player)
-            draw_ai_wall_counter(no_walls_ai)
+
+            draw_wall_counter_text(WIN,"Player Walls",no_walls_player,x=20,y=450,color=PLAYER_COLOR)
+            draw_wall_counter_text(WIN,"Player(2) Walls",no_walls_ai,x=640,y=130,color=AI_COLOR)
+
+            #draw_player_wall_counter(no_walls_player)
+            #draw_ai_wall_counter(no_walls_ai)
 
             turn_font = pygame.font.SysFont(None, 32)
             if game_state.board:
