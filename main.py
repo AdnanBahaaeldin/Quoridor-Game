@@ -437,6 +437,7 @@ def main():
                                 error = False
                             else:
                                 print("No active board to apply move")
+
                         else:
                             error = True
             elif state=="vs_ai":
@@ -654,16 +655,19 @@ def main():
                     highlight_cell(WIN, move[0], move[1], (199, 179, 153))
                     valid_buttons.append((move[0], move[1]))
                 
-            if error:
-                error_message(WIN, "Invalid Move!", error)
+
 
             draw_walls(WIN)
 
             if placing_wall:
                 mx, my = pygame.mouse.get_pos()
                 pos = get_wall_from_mouse(mx, my)
+
                 if pos:
                     draw_wall_preview(WIN, *pos)
+
+            if error:
+                error_message(WIN, "Invalid Move!", error)
 
 
         pygame.display.flip()
