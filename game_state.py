@@ -12,6 +12,7 @@ class GameState:
        self.undo_stack = []
        self.redo_stack = []
        self.game_winner = None
+       self.difficulty = None
 
    def save_state(self, board):
        snapshot = {
@@ -41,7 +42,10 @@ class GameState:
            if board.player1.position[0] == 0:
                self.game_winner = "player1"
        else:
-           self.game_winner = "player2"
+           if self.difficulty == None:
+                self.game_winner = "player2"
+           else:
+               self.game_winner = "AI"
 
        return self.is_game_over
 
@@ -83,6 +87,7 @@ class GameState:
            "h_walls": deepcopy(board.h_walls),
            "v_walls": deepcopy(board.v_walls),
            "turn": board.get_current_turn(),
+           "difficulty": self.difficulty,
        }
 
        with open("save_game.json", "w") as f:
@@ -130,6 +135,7 @@ class GameState:
        )
        player2.set_number_of_walls(snapshot["player2"]["number_of_walls"])
 
+       self.difficulty = snapshot["difficulty"]
        board.set_player1(player1)
        board.set_player2(player2)
        board.set_h_walls(snapshot["h_walls"])

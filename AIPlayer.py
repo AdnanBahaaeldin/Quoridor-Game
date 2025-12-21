@@ -41,7 +41,7 @@ class AIPlayer:
             self.wall_bonus_weight = 0.5
             self.difficulty = 'medium'
         else:  # hard
-            self.search_depth = 3  # Deep search
+            self.search_depth = 2  # Deep search
             self.wall_bonus_weight = 1.5
             self.difficulty = 'hard'
 
@@ -201,7 +201,7 @@ class AIPlayer:
         valid_moves = self.get_valid_moves(board_copy)
 
         if not valid_moves:
-            return  # No valid moves available
+            return () # No valid moves available
         print(f"ai player {self.board.get_current_turn()}")
         # Check for immediate win
         current_player = self.board.get_current_player()
@@ -215,7 +215,7 @@ class AIPlayer:
 
         if fast_win_move:
             self.apply_move(self.board, fast_win_move)
-            return
+            return fast_win_move
 
         # Easy difficulty: Random valid move
         if self.difficulty == 'easy':
@@ -231,11 +231,12 @@ class AIPlayer:
                 best_move = random.choice(valid_moves)
         
             self.apply_move(self.board, best_move)
+            return best_move
         # Medium difficulty: Greedy
         elif self.difficulty == "medium":
             best_move = None
             best_score = -float('inf')
-
+            print (valid_moves)
             for move in valid_moves:
                 board_sim = copy.deepcopy(self.board)
                 self.apply_move(board_sim, move)
@@ -269,6 +270,7 @@ class AIPlayer:
             if best_move:
                 self.apply_move(self.board, best_move)
             print(best_move  , best_score)
+            return best_move
             
         # Hard difficulty: Use minimax
         else:
@@ -289,6 +291,8 @@ class AIPlayer:
                 self.apply_move(self.board, best_move)
 
             print(best_move)
+            return best_move
+
 
 
 # Factory function for creating AI players

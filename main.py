@@ -99,6 +99,38 @@ vs_human_button = Button(
     text_color=text_color
 )
 
+gap = 20  # sensible spacing between buttons
+start_x = (WIN.get_width()- (3 * button_width + 2 * gap)) // 2
+buttons_y = 300  # whatever vertical position you want
+
+ai_mode_easy = Button(
+    rect=(start_x, buttons_y, button_width, button_height),
+    text="Easy",
+    font=font,
+    color=normal_color,
+    hover_color=hover_color,
+    text_color=text_color
+)
+
+ai_mode_medium = Button(
+    rect=(start_x + button_width + gap, buttons_y, button_width, button_height),
+    text="Medium",
+    font=font,
+    color=normal_color,
+    hover_color=hover_color,
+    text_color=text_color
+)
+
+ai_mode_hard = Button(
+    rect=(start_x + 2 * (button_width + gap), buttons_y, button_width, button_height),
+    text="Hard",
+    font=font,
+    color=normal_color,
+    hover_color=hover_color,
+    text_color=text_color
+)
+
+
 undo_button = Button(
     rect=(5, 5, 30, 30),  
     image=undo, 
@@ -112,7 +144,7 @@ redo_button = Button(
     hover_color=hover_color)
      
 save_button = Button(   
-    rect=(70, 5, 60, 30),  
+    rect=(5, 5, 60, 30),
     text="Save", 
     font=pygame.font.SysFont(None, 24),
     color=(255, 255, 255),
@@ -339,6 +371,16 @@ def draw_wall_counter_text(surface, label, count, x, y, color):
     text = wall_font.render(f"{label}: {count}", True, color)
     surface.blit(text, (x, y))
 
+def print_winner(surface, player):
+    font = pygame.font.SysFont(None, 24)
+    text_surf = font.render(player + ' WON!', True, (255, 0, 0))
+    text_rect = text_surf.get_rect(center=(WIDTH // 2, HEIGHT - 30))
+    surface.blit(text_surf, text_rect)
+
+
+
+
+
 
 def main():
 
@@ -354,8 +396,10 @@ def main():
     # ⚡ Wall counters
     no_walls_player = 10
     no_walls_ai = 10
-
+    ai_move = ()
     ai_player = None
+    message_start_time = None
+    is_saved = False
 
     while run:
         clock.tick(60)  # 60 FPS
@@ -378,25 +422,9 @@ def main():
                     state="continue_game"
             elif state=="new_game":
                 if vs_ai_button.handle_event(event):
-                    state = "vs_ai"
-                    ai_player = AIPlayer(board, 2, 8, 'easy')
-                    active_board = game_state.board
-                    cell_buttons.clear()
-                    for row in range(BOARD_SIZE):
-                        for col in range(BOARD_SIZE):
-                            rect = (
-                                board_x + col * CELL_SIZE,
-                                board_y + row * CELL_SIZE,
-                                CELL_SIZE,
-                                CELL_SIZE
-                            )
-                            button = Button(
-                                rect=rect,
-                                color=hover_color,
-                                hover_color=(hover_color[0] + 20, hover_color[1] + 20, hover_color[2] + 20)
-                            )
-                            cell_buttons.append((row, col, button))
+                    state = "ai_mode"
                 if vs_human_button.handle_event(event):
+                    active_board = game_state.board
                     state="vs_human"
                     # create grid buttons once when entering vs_human
                     cell_buttons.clear()
@@ -421,33 +449,37 @@ def main():
                 cols = len(active_board.h_walls[0])
 
                 for r in range(rows):
+                    col = 0
                     for c in range(cols):
                         is_wall = active_board.h_walls[r][c]
                         if is_wall:
-                            if not active_board.h_walls[r][c-1]:
+                            if not active_board.h_walls[r][c-1] or (c - col) == 2:
                                 walls.append((r+1, c, 'H'))
+                                col = c
 
 
                 rows = len(active_board.v_walls)
                 cols = len(active_board.v_walls[0])
 
-                for r in range(rows):
-                    for c in range(cols):
+                for c in range(cols):
+                    row = 0
+                    for r in range(rows):
                         is_wall = active_board.v_walls[r][c]
                         if is_wall:
-                            if not active_board.v_walls[r-1][c]:
+                            if not active_board.v_walls[r-1][c] or (r - row) == 2:
                                 walls.append((r, c+1, 'V'))
+                                row = r
                             pass
 
                 no_walls_player = active_board.get_player1().get_number_of_walls()
                 no_walls_ai = active_board.get_player2().get_number_of_walls()
 
-                # if active_board.get_player2().get_name() == 'AI':
-                #     state="vs_ai"
-                # else:
-                #     state="vs_human"
+                if active_board.get_player2().get_name() == 'ai':
+                    state="vs_ai"
+                    ai_player = AIPlayer(active_board, 2, 8, game_state.difficulty)
+                else:
+                    state="vs_human"
 
-                state = "vs_human"
                 cell_buttons.clear()
                 for row in range(BOARD_SIZE):
                     for col in range(BOARD_SIZE):
@@ -464,44 +496,28 @@ def main():
                         )
                         cell_buttons.append((row, col, button))
             elif state=="vs_human":
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if player_circle.is_clicked(event.pos) and  no_walls_player > 0:
-                            placing_wall = True
-                            wall_owner = "PLAYER"
-
-                    if player_2_circle.is_clicked(event.pos) and no_walls_ai > 0:
-                            placing_wall = True
-                            wall_owner = "AI"
-
-                if placing_wall and event.type == pygame.MOUSEBUTTONDOWN:
-                    pos = get_wall_from_mouse(*event.pos)
-                    if pos:
-                        r, c = pos
-                        if not wall_overlaps(r, c, wall_orientation, walls):
-                            walls.append((r, c, wall_orientation))
-                            if wall_owner == "PLAYER":
-                                no_walls_player -= 1
-                            elif wall_owner == "AI":
-                                no_walls_ai -= 1
-
-                            placing_wall = False
-                            wall_owner = None
+                if save_button.handle_event(event):
+                    game_state.save_game(active_board)
+                    is_saved = True
+                    message_start_time = pygame.time.get_ticks()
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if player_circle.is_clicked(event.pos) and  no_walls_player > 0 and game_state.board.get_current_player().get_name() == 'Player':
+                    if player_circle.is_clicked(
+                            event.pos) and no_walls_player > 0 and game_state.board.get_current_player().get_name() == 'Player':
                         if placing_wall == True:
                             placing_wall = False
-                            for r,c,btn in cell_buttons:
+                            for r, c, btn in cell_buttons:
                                 btn.enabled = True
 
-                        else :
+                        else:
                             placing_wall = True
-                            for r,c,btn in cell_buttons:
+                            for r, c, btn in cell_buttons:
                                 btn.enabled = False
 
                         wall_owner = "PLAYER"
 
-                    if player_2_circle.is_clicked(event.pos) and no_walls_ai > 0 and game_state.board.get_current_player().get_name() == 'AI':
+                    if player_2_circle.is_clicked(
+                            event.pos) and no_walls_ai > 0 and game_state.board.get_current_player().get_name() == 'AI':
                         if placing_wall == True:
                             placing_wall = False
                             for r, c, btn in cell_buttons:
@@ -516,23 +532,25 @@ def main():
 
                 if placing_wall and event.type == pygame.MOUSEBUTTONDOWN:
                     pos = get_wall_from_mouse(*event.pos)
-                    print (pos)
+                    print(pos)
                     if pos:
                         r, c = pos
                         if (wall_orientation == "H" and r != 0) or (wall_orientation == "V" and c != 0):
-
+                            is_wall_placed = False
                             if wall_orientation == 'H':
-                                if game_state.board.place_wall(wall_orientation.lower(), r-1, c) == False:
+                                is_wall_placed = game_state.board.place_wall(wall_orientation.lower(), r - 1, c)
+                                if is_wall_placed == False:
                                     print("Invalid wall position")
                                     continue
                             else:
-                               if game_state.board.place_wall(wall_orientation.lower(), r, c-1) == False:
-                                   print("Invalid wall position")
-                                   continue
+                                is_wall_placed = game_state.board.place_wall(wall_orientation.lower(), r, c - 1)
+                                if  is_wall_placed == False:
+                                    print("Invalid wall position")
+                                    continue
 
-
-
-                            if not wall_overlaps(r, c, wall_orientation, walls) and ((row != -1 and c > 0 and wall_orientation == 'V') or (row != -1 and wall_orientation == 'H')):
+                            if not wall_overlaps(r, c, wall_orientation, walls) and (
+                                    (row != -1 and c > 0 and wall_orientation == 'V') or (
+                                    row != -1 and wall_orientation == 'H')) and is_wall_placed == True:
                                 walls.append((r, c, wall_orientation))
                                 if wall_owner == "PLAYER":
                                     no_walls_player -= 1
@@ -550,9 +568,9 @@ def main():
                                 btn.enabled = True
                         continue
 
-
                 for row, col, button in cell_buttons:
-                    if not button.enabled: break
+                    if not button.enabled:
+                        break
                     else:
                         if not game_state.is_game_over:
                             if button.handle_event(event) and not placing_wall:
@@ -569,10 +587,28 @@ def main():
                                     error = True
             elif state=="vs_ai":
                 if save_button.handle_event(event):
-                    game_state.save_game(active_board)
+                    game_state.save_game(game_state.board)
+                    is_saved = True
+                    message_start_time = pygame.time.get_ticks()
 
-                if game_state.board.get_current_player().get_name() == 'AI':
-                    ai_player.ai_move()
+                if game_state.board.get_current_player().get_name() == 'ai':
+                   ai_move =  ai_player.ai_move()
+                   if ai_move[0] == 1:
+                       placing_wall = True
+                       wall_owner = "AI"
+                       pos = ai_move[1]
+                       wall_orientation = ai_move[2].upper()
+                       if(wall_orientation == 'H'):
+                            walls.append((pos[0]+1, pos[1], wall_orientation))
+                       else:
+                            walls.append((pos[0], pos[1]+1, wall_orientation))
+                       no_walls_ai -=1
+                       placing_wall = False
+                   else:
+                       placing_wall = False
+                   game_state.save_state(active_board)
+
+
                 else:
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         if player_circle.is_clicked(
@@ -581,7 +617,6 @@ def main():
                                 placing_wall = False
                                 for r, c, btn in cell_buttons:
                                     btn.enabled = True
-
                             else:
                                 placing_wall = True
                                 for r, c, btn in cell_buttons:
@@ -640,8 +675,70 @@ def main():
                                             print("No active board to apply move")
                                     else:
                                         error = True
-
-
+            elif state == 'ai_mode':
+                if ai_mode_easy.handle_event(event):
+                    game_state.difficulty = 'easy'
+                    state = "vs_ai"
+                    game_state.board.player2.name = 'ai'
+                    active_board = game_state.board
+                    ai_player = AIPlayer(board, 2, 8, game_state.difficulty)
+                    cell_buttons.clear()
+                    for row in range(BOARD_SIZE):
+                        for col in range(BOARD_SIZE):
+                            rect = (
+                                board_x + col * CELL_SIZE,
+                                board_y + row * CELL_SIZE,
+                                CELL_SIZE,
+                                CELL_SIZE
+                            )
+                            button = Button(
+                                rect=rect,
+                                color=hover_color,
+                                hover_color=(hover_color[0] + 20, hover_color[1] + 20, hover_color[2] + 20)
+                            )
+                            cell_buttons.append((row, col, button))
+                elif ai_mode_medium.handle_event(event):
+                    game_state.difficulty = 'medium'
+                    state = "vs_ai"
+                    game_state.board.player2.name = 'ai'
+                    active_board = game_state.board
+                    ai_player = AIPlayer(board, 2, 8, game_state.difficulty)
+                    cell_buttons.clear()
+                    for row in range(BOARD_SIZE):
+                        for col in range(BOARD_SIZE):
+                            rect = (
+                                board_x + col * CELL_SIZE,
+                                board_y + row * CELL_SIZE,
+                                CELL_SIZE,
+                                CELL_SIZE
+                            )
+                            button = Button(
+                                rect=rect,
+                                color=hover_color,
+                                hover_color=(hover_color[0] + 20, hover_color[1] + 20, hover_color[2] + 20)
+                            )
+                            cell_buttons.append((row, col, button))
+                elif ai_mode_hard.handle_event(event):
+                    game_state.difficulty = 'hard'
+                    state = "vs_ai"
+                    game_state.board.player2.name = 'ai'
+                    active_board = game_state.board
+                    ai_player = AIPlayer(board, 2, 8, game_state.difficulty)
+                    cell_buttons.clear()
+                    for row in range(BOARD_SIZE):
+                        for col in range(BOARD_SIZE):
+                            rect = (
+                                board_x + col * CELL_SIZE,
+                                board_y + row * CELL_SIZE,
+                                CELL_SIZE,
+                                CELL_SIZE
+                            )
+                            button = Button(
+                                rect=rect,
+                                color=hover_color,
+                                hover_color=(hover_color[0] + 20, hover_color[1] + 20, hover_color[2] + 20)
+                            )
+                            cell_buttons.append((row, col, button))
                 
         if state=="menu":
             WIN.fill((255, 255, 255)) 
@@ -656,10 +753,12 @@ def main():
             vs_ai_button.draw(WIN)
             vs_human_button.draw(WIN)
 
-        elif state=="continue_game":
+        elif state == "ai_mode":
             WIN.fill((255, 255, 255))
             WIN.blit(logo, logo_rect)
-            browse_file_button.draw(WIN)
+            ai_mode_easy.draw(WIN)
+            ai_mode_medium.draw(WIN)
+            ai_mode_hard.draw(WIN)
         
         elif state == "vs_ai":
             WIN.fill((255, 255, 255))
@@ -748,22 +847,22 @@ def main():
                     valid_buttons.append((move[0], move[1]))
 
             draw_walls(WIN)
+            if game_state.board.get_current_player() == game_state.board.player1:
+                if placing_wall:
+                    mx, my = pygame.mouse.get_pos()
+                    pos = get_wall_from_mouse(mx, my)
 
-            if placing_wall:
-                mx, my = pygame.mouse.get_pos()
-                pos = get_wall_from_mouse(mx, my)
-
-                if pos:
-                    r, c = pos
-                    if (wall_orientation == "H" and r != 0) or (wall_orientation == "V" and c != 0):
-                        draw_wall_preview(WIN, *pos)
+                    if pos:
+                        r, c = pos
+                        if (wall_orientation == "H" and r != 0) or (wall_orientation == "V" and c != 0):
+                            draw_wall_preview(WIN, *pos)
 
             if error:
                 error_message(WIN, "Invalid Move!", error)
 
             if game_state.is_game_over:
                 print_winner(WIN, game_state.game_winner)
-        
+
         elif state == "vs_human":
             WIN.fill((255, 255, 255))
             #draw navbar
@@ -831,7 +930,10 @@ def main():
             turn_font = pygame.font.SysFont(None, 32)
             if game_state.board:
                 current_player = game_state.board.get_current_player()
-                text_surf = turn_font.render("It's {}'s turn".format(current_player.name), True, PLAYER_COLOR if current_player.name == "Player" else AI_COLOR)
+                if current_player.name == 'Player':
+                    text_surf = turn_font.render("It's Player1's turn".format(current_player.name), True, PLAYER_COLOR)
+                else:
+                    text_surf = turn_font.render("It's Player2's turn".format(current_player.name), True, AI_COLOR)
             else:
                 text_surf = turn_font.render("It's {}'s turn".format("Player"), True, PLAYER_COLOR if current_player.name == "Player" else AI_COLOR)
             text_rect = text_surf.get_rect(midtop=(WIDTH // 2, 50))    
@@ -869,6 +971,17 @@ def main():
             if game_state.is_game_over:
                 print_winner(WIN, game_state.game_winner)
 
+        if is_saved:
+            current_time = pygame.time.get_ticks()
+            if current_time - message_start_time <= 2000:
+                font = pygame.font.SysFont(None, 24)
+                text_surf = font.render('Game Saved!', True, (0, 255, 0))
+                text_rect = text_surf.get_rect(center=(WIDTH // 2, HEIGHT - 30))
+                WIN.blit(text_surf, text_rect)
+            else:
+                is_saved = False
+                message_start_time = None
+
         pygame.display.flip()
         pygame.display.update()
 
@@ -876,3 +989,5 @@ def main():
     
 if __name__ == "__main__":
     main()
+
+

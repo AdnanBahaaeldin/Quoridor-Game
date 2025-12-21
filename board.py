@@ -99,13 +99,13 @@ class Board:
         player1_can_reach = pathfinding.has_valid_path(self, self.get_player1_pos(), 0)
         player2_can_reach = pathfinding.has_valid_path(self, self.get_player2_pos(), self.rows - 1)
 
-        if player1_can_reach and player2_can_reach:
-            return True
-
         self.h_walls[row][column] = False
-        self.h_walls[row][column+1] = False
+        self.h_walls[row][column + 1] = False
 
-        return False
+        if not player1_can_reach or not player2_can_reach:
+            return False
+
+        return True
 
     def can_place_vertical_wall(self, row, column):
         if not self.is_inside_board((row, column)):
@@ -123,28 +123,30 @@ class Board:
         player1_can_reach = pathfinding.has_valid_path(self, self.get_player1_pos(), 0)
         player2_can_reach = pathfinding.has_valid_path(self, self.get_player2_pos(), self.rows - 1)
 
-        if player1_can_reach and player2_can_reach :
-            return True
-
         self.v_walls[row][column] = False
-        self.v_walls[row+1][column] = False
+        self.v_walls[row + 1][column] = False
 
-        return False
+        if not player1_can_reach or not player2_can_reach:
+            return False
+
+        return True
 
 
     def place_wall(self, orientation, row, column):
 
+        state = False
+
         if orientation == 'h':
-            if not self.can_place_horizontal_wall(row, column):
-                return False
-            self.h_walls[row][column] = True
-            self.h_walls[row][column + 1] = True
+            if self.can_place_horizontal_wall(row, column):
+                self.h_walls[row][column] = True
+                self.h_walls[row][column + 1] = True
+                state = True
 
         elif orientation == 'v':
-            if not self.can_place_vertical_wall(row, column):
-                return False
-            self.v_walls[row][column] = True
-            self.v_walls[row + 1][column] = True
+            if self.can_place_vertical_wall(row, column):
+                self.v_walls[row][column] = True
+                self.v_walls[row + 1][column] = True
+                state = True
 
         if self.get_current_turn() == 1:
             if self.player1.get_number_of_walls() <= 0:
@@ -159,7 +161,10 @@ class Board:
 
         self.game_state.save_state(self)
 
-        return True
+        if state:
+            return True
+
+        return False
 
     ##################################################
     ############Movement logic###########
