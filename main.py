@@ -2,7 +2,7 @@ import pygame
 import json
 from game_state import GameState
 import pathfinding
-
+from AIPlayer import AIPlayer
 from widgets import Button, CircleButton
 from game_state import GameState
 WIDTH, HEIGHT = 800, 600
