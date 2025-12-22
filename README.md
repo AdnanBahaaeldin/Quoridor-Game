@@ -27,7 +27,31 @@ Players take turns either moving their pawn or placing a wall to block their opp
 ---
 
 ## 🖼️ Screenshots & Controls
-> 📷 *Screenshots of the game in action should be added here.*
+The first page shows 2 options: either to start a new game or load a previously saved game.
+
+<img width="1003" height="779" alt="Screenshot 2025-12-22 221807" src="https://github.com/user-attachments/assets/2b777c70-7137-4805-bc14-abbd11790a72" />
+
+If we choose New game the second page shows 2 options: either to play against AI or a human.
+
+<img width="997" height="779" alt="Screenshot 2025-12-22 221824" src="https://github.com/user-attachments/assets/cf84c706-3aaa-4b85-917a-9c9a05279bae" />
+
+This page shows a game started against a human shwoing controls for valid moves, how to put walls, the number of walls available for each player, and how to save the game.
+
+<img width="3156" height="2475" alt="Picture1" src="https://github.com/user-attachments/assets/54fe0dad-1a09-4f8c-bce3-cb1a5fce1793" />
+
+This page 3 difficulty level if you choose to play against AI on the second page.
+
+<img width="998" height="777" alt="Screenshot 2025-12-22 221907" src="https://github.com/user-attachments/assets/b35e6b74-5f0d-4aa0-bbb7-4a454c36ad92" />
+
+This page shows controls for choosing the direction of walls placed on the board in a game against AI.
+
+<img width="3174" height="2475" alt="Picture2" src="https://github.com/user-attachments/assets/bd03bc33-7426-4c88-aa85-03062aab9da6" />
+
+This page winnig message that appears whenever a player reaches his goal row.
+
+<img width="3172" height="2475" alt="Picture3" src="https://github.com/user-attachments/assets/658a3094-f1c0-4409-9fb2-9aae31acbe54" />
+
+
 
 <!-- Example placeholders -->
 <!-- ![Main Menu](screenshots/menu.png) -->
@@ -94,3 +118,7 @@ quoridor-game/
 ```
 
 ## 🎥 Demo Video
+
+
+https://github.com/user-attachments/assets/6a8aeee1-efd5-40dd-93b2-2f6b9aeca436
+
