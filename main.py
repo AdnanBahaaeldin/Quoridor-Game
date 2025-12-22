@@ -149,7 +149,7 @@ save_button = Button(
     font=pygame.font.SysFont(None, 24),
     color=(255, 255, 255),
     hover_color=hover_color,
-    text_color=(0,0,0))    
+    text_color=(0,0,0))
                
 board_x = (WIN.get_width() - BOARD_PIXEL) // 2
 board_y = 100
@@ -181,6 +181,8 @@ def error_message(surface, message, error=False):
         text_surf = font.render(message, True, (255, 0, 0))
         text_rect = text_surf.get_rect(center=(WIDTH // 2, HEIGHT - 30))
         surface.blit(text_surf, text_rect)
+
+
 
 def get_wall_from_mouse(mx, my):
     rx = mx - board_x
@@ -377,10 +379,11 @@ def print_winner(surface, player):
     text_rect = text_surf.get_rect(center=(WIDTH // 2, HEIGHT - 30))
     surface.blit(text_surf, text_rect)
 
-
-
-
-
+def print_text(surface):
+    font = pygame.font.SysFont(None, 24)
+    text_surf = font.render("Press 'r' to rotate wall", True, (255, 0, 255))
+    text_rect = text_surf.get_rect(center=(WIDTH // 2, HEIGHT - 30))
+    surface.blit(text_surf, text_rect)
 
 def main():
 
@@ -516,6 +519,7 @@ def main():
 
                         wall_owner = "PLAYER"
 
+
                     if player_2_circle.is_clicked(
                             event.pos) and no_walls_ai > 0 and game_state.board.get_current_player().get_name() == 'AI':
                         if placing_wall == True:
@@ -529,6 +533,7 @@ def main():
                                 btn.enabled = False
 
                         wall_owner = "AI"
+
 
                 if placing_wall and event.type == pygame.MOUSEBUTTONDOWN:
                     pos = get_wall_from_mouse(*event.pos)
@@ -851,6 +856,7 @@ def main():
             draw_walls(WIN)
             if game_state.board.get_current_player() == game_state.board.player1:
                 if placing_wall:
+                    print_text(WIN)
                     mx, my = pygame.mouse.get_pos()
                     pos = get_wall_from_mouse(mx, my)
 
@@ -957,6 +963,7 @@ def main():
             draw_walls(WIN)
 
             if placing_wall:
+                print_text(WIN)
                 mx, my = pygame.mouse.get_pos()
                 pos = get_wall_from_mouse(mx, my)
 
