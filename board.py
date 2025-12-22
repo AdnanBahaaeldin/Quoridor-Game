@@ -90,7 +90,7 @@ class Board:
         if self.h_walls[row][column] or self.h_walls[row][column + 1]:
             return False
 
-        if self.v_walls[row][column]:
+        if self.v_walls[row][column] and (self.h_walls[row+1][column] == True):
             return False
 
         self.h_walls[row][column] = True
@@ -114,7 +114,7 @@ class Board:
         if self.v_walls[row][column] or self.v_walls[row + 1][column]:
             return False
 
-        if self.h_walls[row][column]:
+        if self.h_walls[row][column] and (self.h_walls[row][column+1] == True):
             return False
 
         self.v_walls[row][column] = True
@@ -148,16 +148,17 @@ class Board:
                 self.v_walls[row + 1][column] = True
                 state = True
 
-        if self.get_current_turn() == 1:
-            if self.player1.get_number_of_walls() <= 0:
-                return False
-            else:
-                self.player1.set_number_of_walls(self.player1.get_number_of_walls() - 1)
-        elif self.get_current_turn() == 2:
-            if self.player2.get_number_of_walls() <= 0:
-                return False
-            else:
-                self.player2.set_number_of_walls(self.player2.get_number_of_walls() - 1)
+        if state:
+            if self.get_current_turn() == 1:
+                if self.player1.get_number_of_walls() <= 0:
+                    return False
+                else:
+                    self.player1.set_number_of_walls(self.player1.get_number_of_walls() - 1)
+            elif self.get_current_turn() == 2:
+                if self.player2.get_number_of_walls() <= 0:
+                    return False
+                else:
+                    self.player2.set_number_of_walls(self.player2.get_number_of_walls() - 1)
 
         self.game_state.save_state(self)
 
