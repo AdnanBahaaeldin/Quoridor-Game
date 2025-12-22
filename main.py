@@ -540,15 +540,15 @@ def main():
                             if wall_orientation == 'H':
                                 is_wall_placed = game_state.board.place_wall(wall_orientation.lower(), r - 1, c)
                                 if is_wall_placed == False:
-                                    print("Invalid wall position")
+                                    error = True
                                     continue
                             else:
                                 is_wall_placed = game_state.board.place_wall(wall_orientation.lower(), r, c - 1)
                                 if  is_wall_placed == False:
-                                    print("Invalid wall position")
+                                    error = True
                                     continue
 
-                            if not wall_overlaps(r, c, wall_orientation, walls) and (
+                            if (
                                     (row != -1 and c > 0 and wall_orientation == 'V') or (
                                     row != -1 and wall_orientation == 'H')) and is_wall_placed == True:
                                 walls.append((r, c, wall_orientation))
@@ -632,17 +632,19 @@ def main():
                             if (wall_orientation == "H" and r != 0) or (wall_orientation == "V" and c != 0):
 
                                 if wall_orientation == 'H':
-                                    if game_state.board.place_wall(wall_orientation.lower(), r - 1, c) == False:
-                                        print("Invalid wall position")
+                                    is_wall_placed = game_state.board.place_wall(wall_orientation.lower(), r - 1, c)
+                                    if is_wall_placed == False:
+                                        error = True
                                         continue
                                 else:
-                                    if game_state.board.place_wall(wall_orientation.lower(), r, c - 1) == False:
-                                        print("Invalid wall position")
+                                    is_wall_placed = game_state.board.place_wall(wall_orientation.lower(), r, c - 1)
+                                    if is_wall_placed == False:
+                                        error = True
                                         continue
 
-                                if not wall_overlaps(r, c, wall_orientation, walls) and (
+                                if (
                                         (row != -1 and c > 0 and wall_orientation == 'V') or (
-                                        row != -1 and wall_orientation == 'H')):
+                                        row != -1 and wall_orientation == 'H')) and is_wall_placed == True:
                                     walls.append((r, c, wall_orientation))
                                     if wall_owner == "PLAYER":
                                         no_walls_player -= 1
